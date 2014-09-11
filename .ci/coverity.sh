@@ -5,9 +5,9 @@
 # branch.
 set +e
 curl -s https://scan.coverity.com/scripts/travisci_build_coverity_scan.sh |
-COVERITY_SCAN_PROJECT_NAME="neovim/neovim" \
-	COVERITY_SCAN_NOTIFICATION_EMAIL="coverity@aktau.be" \
-	COVERITY_SCAN_BRANCH_PATTERN="coverity-scan" \
+COVERITY_SCAN_PROJECT_NAME="fwalch/neovim" \
+	COVERITY_SCAN_NOTIFICATION_EMAIL="florian@fwalch.com" \
+	COVERITY_SCAN_BRANCH_PATTERN="coverity-testing" \
 	COVERITY_SCAN_BUILD_COMMAND_PREPEND="$MAKE_CMD deps" \
 	COVERITY_SCAN_BUILD_COMMAND="$MAKE_CMD nvim" \
 	bash

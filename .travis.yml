@@ -5,7 +5,7 @@ env:
     - CI_SCRIPTS="$PROJECT_ROOT/.ci"
     # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
     # via the "travis encrypt" command using the project repo's public key
-    - secure: "QEz92NyItkzQu52kCFD928jEwUYnA2OIgSyeNrp+Y3gm5rOmSZerY8hGiXyNZxocap9+qIPCapRRYU3ZYKWZPeucWMLN3aIjxAFdhugKbnmNYE1jFugb6b8N3SxiX/3206NHXlYaz0OZhh6OBAFmPUXamJC8OrWVgPNPo7wv4UQ="
+    - secure: "jOnJJUc9bBrdghXUGDQktV8pslv2DMIUS8Xy3E5UWs2Qy+vpuFY2gY3NCrd08XBlrpOOaodoG/eD8jFcq9y060i7fe5XM7mQL9oiVx+r6QT/of7tEA173EGxOazoaoQoiZDPPWT3ePAXx8jCQdDcVEKYBlxu9CKBz3drlGUM7bk="
   matrix:
     - CI_TARGET=clang-asan
     - CI_TARGET=gcc

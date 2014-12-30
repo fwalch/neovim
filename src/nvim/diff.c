@@ -2017,7 +2017,7 @@ int diff_infold(win_T *wp, linenr_T lnum)
 }
 
 /// "dp" and "do" commands.
-void nv_diffgetput(bool put, size_t count)
+static void nv_diffgetput(bool put, size_t count)
 {
   exarg_T ea;
   char buf[30];
@@ -2039,6 +2039,14 @@ void nv_diffgetput(bool put, size_t count)
   ea.line1 = curwin->w_cursor.lnum;
   ea.line2 = curwin->w_cursor.lnum;
   ex_diffgetput(&ea);
+}
+
+void nv_diffget(size_t count){
+    nv_diffgetput(false, count);
+}
+
+void nv_diffput(size_t count){
+    nv_diffgetput(true, count);
 }
 
 /// ":diffget" and ":diffput"

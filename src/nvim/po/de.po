@@ -11,7 +11,7 @@ msgstr ""
 "Project-Id-Version: Vim(deutsch)\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-04-18 13:07+0300\n"
-"PO-Revision-Date: 2015-04-18 12:14+0200\n"
+"PO-Revision-Date: 2015-04-18 12:27+0200\n"
 "Last-Translator: Florian <florian@fwalch.com>\n"
 "Language-Team: German <http://example.com/projects/neovim/nvim/de/>\n"
 "Language: de\n"
@@ -1340,7 +1340,7 @@ msgstr " Marken"
 
 #: ../ex_cmds.c:1446
 msgid " oldfiles"
-msgstr " oldfiles"
+msgstr " Test"
 
 #: ../ex_cmds.c:1447
 msgid " FAILED"

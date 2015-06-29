@@ -2966,6 +2966,8 @@ set_one_cmd_context (
   case CMD_botright:
   case CMD_browse:
   case CMD_bufdo:
+  case CMD_cdo:
+  case CMD_cfdo:
   case CMD_confirm:
   case CMD_debug:
   case CMD_folddoclosed:
@@ -2975,7 +2977,9 @@ set_one_cmd_context (
   case CMD_keepjumps:
   case CMD_keepmarks:
   case CMD_keeppatterns:
+  case CMD_ldo:
   case CMD_leftabove:
+  case CMD_lfdo:
   case CMD_lockmarks:
   case CMD_noautocmd:
   case CMD_noswapfile:

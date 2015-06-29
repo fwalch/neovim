@@ -2580,18 +2580,104 @@ static char_u *get_mef_name(void)
   return name;
 }
 
+/// Returns the number of valid entries in the current quickfix/location list.
+size_t qf_get_size(exarg_T *eap)
+  FUNC_ATTR_NONNULL_ALL
+{
+  qf_info_T *qi = &ql_info;
+  if (eap->cmdidx == CMD_ldo || eap->cmdidx == CMD_lfdo) {
+    // Location list.
+    qi = GET_LOC_LIST(curwin);
+    if (qi == NULL) {
+      return 0;
+    }
+  }
+
+  int prev_fnum = 0;
+  size_t sz = 0;
+  qfline_T *qfp;
+  size_t i;
+  assert(qi->qf_lists[qi->qf_curlist].qf_count >= 0);
+  for (i = 0, qfp = qi->qf_lists[qi->qf_curlist].qf_start;
+       i < (size_t)qi->qf_lists[qi->qf_curlist].qf_count && qfp != NULL;
+       i++, qfp = qfp->qf_next) {
+    if (!qfp->qf_valid) {
+      continue;
+    }
+
+    if (eap->cmdidx == CMD_cdo || eap->cmdidx == CMD_ldo) {
+      // Count all valid entries.
+      sz++;
+    } else if (qfp->qf_fnum > 0 && qfp->qf_fnum != prev_fnum) {
+      // Count the number of files.
+      sz++;
+      prev_fnum = qfp->qf_fnum;
+    }
+  }
+
+  return sz;
+}
+
+/// Get the 'n'th valid error entry in the quickfix or location list.
+///
+/// Used by :cdo, :ldo, :cfdo and :lfdo commands.
+/// For :cdo and :ldo returns the 'n'th valid error entry.
+/// For :cfdo and :lfdo returns the 'n'th valid file entry.
+static size_t qf_get_nth_valid_entry(qf_info_T *qi, size_t n, bool fdo)
+  FUNC_ATTR_NONNULL_ALL
+{
+  qf_list_T *qfl = &qi->qf_lists[qi->qf_curlist];
+
+  // Check if the list has valid errors.
+  if (qfl->qf_count <= 0 || qfl->qf_nonevalid) {
+    return 1;
+  }
+
+  int prev_fnum = 0;
+  size_t eidx = 0;
+  size_t i;
+  qfline_T *qfp;
+  assert(qfl->qf_count >= 0);
+  for (i = 1, qfp = qfl->qf_start;
+       i <= (size_t)qfl->qf_count && qfp != NULL;
+       i++, qfp = qfp->qf_next) {
+    if (qfp->qf_valid) {
+      if (fdo) {
+        if (qfp->qf_fnum > 0 && qfp->qf_fnum != prev_fnum) {
+          // Count the number of files.
+          eidx++;
+          prev_fnum = qfp->qf_fnum;
+        }
+      } else {
+        eidx++;
+      }
+    }
+
+    if (eidx == n) {
+      break;
+    }
+  }
+
+  return (i <= (size_t)qfl->qf_count) ? i : 1;
+}
+
 /*
  * ":cc", ":crewind", ":cfirst" and ":clast".
  * ":ll", ":lrewind", ":lfirst" and ":llast".
+ * ":cdo", ":ldo", ":cfdo" and ":lfdo".
  */
 void ex_cc(exarg_T *eap)
 {
   qf_info_T   *qi = &ql_info;
+  int errornr;
 
   if (eap->cmdidx == CMD_ll
       || eap->cmdidx == CMD_lrewind
       || eap->cmdidx == CMD_lfirst
-      || eap->cmdidx == CMD_llast) {
+      || eap->cmdidx == CMD_llast
+      || eap->cmdidx == CMD_llast
+      || eap->cmdidx == CMD_ldo
+      || eap->cmdidx == CMD_lfdo) {
     qi = GET_LOC_LIST(curwin);
     if (qi == NULL) {
       EMSG(_(e_loclist));
@@ -2599,32 +2685,59 @@ void ex_cc(exarg_T *eap)
     }
   }
 
-  qf_jump(qi, 0,
-      eap->addr_count > 0
-      ? (int)eap->line2
-      : (eap->cmdidx == CMD_cc || eap->cmdidx == CMD_ll)
-      ? 0
-      : (eap->cmdidx == CMD_crewind || eap->cmdidx == CMD_lrewind
-         || eap->cmdidx == CMD_cfirst || eap->cmdidx == CMD_lfirst)
-      ? 1
-      : 32767,
-      eap->forceit);
+  if (eap->addr_count > 0) {
+    errornr = (int)eap->line2;
+  }
+  else if (eap->cmdidx == CMD_cc || eap->cmdidx == CMD_ll) {
+    errornr = 0;
+  }
+  else if (eap->cmdidx == CMD_crewind || eap->cmdidx == CMD_lrewind
+           || eap->cmdidx == CMD_cfirst || eap->cmdidx == CMD_lfirst) {
+    errornr = 1;
+  }
+  else {
+    errornr = 32767;
+  }
+
+  // For cdo and ldo commands, jump to the nth valid error.
+  // For cfdo and lfdo commands, jump to the nth valid file entry.
+  if (eap->cmdidx == CMD_cdo || eap->cmdidx == CMD_ldo ||
+      eap->cmdidx == CMD_cfdo || eap->cmdidx == CMD_lfdo) {
+    size_t n;
+    if (eap->addr_count > 0) {
+      assert(eap->line1 >= 0);
+      n = (size_t)eap->line1;
+    } else {
+      n = 1;
+    }
+    size_t valid_entry = qf_get_nth_valid_entry(qi, n,
+      eap->cmdidx == CMD_cfdo || eap->cmdidx == CMD_lfdo);
+    assert(valid_entry <= INT_MAX);
+    errornr = (int)valid_entry;
+  }
+
+  qf_jump(qi, 0, errornr, eap->forceit);
 }
 
 /*
  * ":cnext", ":cnfile", ":cNext" and ":cprevious".
  * ":lnext", ":lNext", ":lprevious", ":lnfile", ":lNfile" and ":lpfile".
+ * ":cdo", ":ldo", ":cfdo" and ":lfdo".
  */
 void ex_cnext(exarg_T *eap)
 {
   qf_info_T   *qi = &ql_info;
+  int errornr;
 
   if (eap->cmdidx == CMD_lnext
       || eap->cmdidx == CMD_lNext
       || eap->cmdidx == CMD_lprevious
       || eap->cmdidx == CMD_lnfile
       || eap->cmdidx == CMD_lNfile
-      || eap->cmdidx == CMD_lpfile) {
+      || eap->cmdidx == CMD_lpfile
+      || eap->cmdidx == CMD_lpfile
+      || eap->cmdidx == CMD_ldo
+      || eap->cmdidx == CMD_lfdo) {
     qi = GET_LOC_LIST(curwin);
     if (qi == NULL) {
       EMSG(_(e_loclist));
@@ -2632,15 +2745,26 @@ void ex_cnext(exarg_T *eap)
     }
   }
 
-  qf_jump(qi, (eap->cmdidx == CMD_cnext || eap->cmdidx == CMD_lnext)
+  if (eap->addr_count > 0 &&
+        (eap->cmdidx != CMD_cdo && eap->cmdidx != CMD_ldo &&
+         eap->cmdidx != CMD_cfdo && eap->cmdidx != CMD_lfdo)) {
+    errornr = (int)eap->line2;
+  }
+  else {
+    errornr = 1;
+  }
+
+  qf_jump(qi, (eap->cmdidx == CMD_cnext || eap->cmdidx == CMD_lnext
+               || eap->cmdidx == CMD_cdo || eap->cmdidx == CMD_ldo)
       ? FORWARD
-      : (eap->cmdidx == CMD_cnfile || eap->cmdidx == CMD_lnfile)
+      : (eap->cmdidx == CMD_cnfile || eap->cmdidx == CMD_lnfile
+        || eap->cmdidx == CMD_cfdo || eap->cmdidx == CMD_lfdo)
       ? FORWARD_FILE
       : (eap->cmdidx == CMD_cpfile || eap->cmdidx == CMD_lpfile
          || eap->cmdidx == CMD_cNfile || eap->cmdidx == CMD_lNfile)
       ? BACKWARD_FILE
       : BACKWARD,
-      eap->addr_count > 0 ? (int)eap->line2 : 1, eap->forceit);
+      errornr, eap->forceit);
 }
 
 /*

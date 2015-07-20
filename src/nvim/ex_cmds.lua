@@ -374,6 +374,12 @@ return {
     func='ex_cd',
   },
   {
+    command='cdo',
+    flags=bit.bor(BANG, NEEDARG, EXTRA, NOTRLCOM, RANGE, NOTADR, DFLALL),
+    addr_type=ADDR_LINES,
+    func='ex_listdo',
+  },
+  {
     command='center',
     flags=bit.bor(TRLBAR, RANGE, WHOLEFOLD, EXTRA, CMDWIN, MODIFY),
     addr_type=ADDR_LINES,
@@ -390,6 +396,12 @@ return {
     flags=bit.bor(TRLBAR, FILE1, BANG),
     addr_type=ADDR_LINES,
     func='ex_cfile',
+  },
+  {
+    command='cfdo',
+    flags=bit.bor(BANG, NEEDARG, EXTRA, NOTRLCOM, RANGE, NOTADR, DFLALL),
+    addr_type=ADDR_LINES,
+    func='ex_listdo',
   },
   {
     command='cfirst',
@@ -1286,6 +1298,12 @@ return {
     func='do_cscope',
   },
   {
+    command='ldo',
+    flags=bit.bor(BANG, NEEDARG, EXTRA, NOTRLCOM, RANGE, NOTADR, DFLALL),
+    addr_type=ADDR_LINES,
+    func='ex_listdo',
+  },
+  {
     command='left',
     flags=bit.bor(TRLBAR, RANGE, WHOLEFOLD, EXTRA, CMDWIN, MODIFY),
     addr_type=ADDR_LINES,
@@ -1314,6 +1332,12 @@ return {
     flags=bit.bor(TRLBAR, FILE1, BANG),
     addr_type=ADDR_LINES,
     func='ex_cfile',
+  },
+  {
+    command='lfdo',
+    flags=bit.bor(BANG, NEEDARG, EXTRA, NOTRLCOM, RANGE, NOTADR, DFLALL),
+    addr_type=ADDR_LINES,
+    func='ex_listdo',
   },
   {
     command='lfirst',

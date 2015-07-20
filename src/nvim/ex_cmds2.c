@@ -1821,7 +1821,7 @@ void ex_argdelete(exarg_T *eap)
 }
 
 /*
- * ":argdo", ":windo", ":bufdo", ":tabdo"
+ * ":argdo", ":windo", ":bufdo", ":tabdo", ":cdo", ":ldo", ":cfdo" and ":lfdo"
  */
 void ex_listdo(exarg_T *eap)
 {
@@ -1831,7 +1831,6 @@ void ex_listdo(exarg_T *eap)
   int next_fnum = 0;
   char_u      *save_ei = NULL;
   char_u      *p_shm_save;
-
 
   if (eap->cmdidx != CMD_windo && eap->cmdidx != CMD_tabdo)
     /* Don't do syntax HL autocommands.  Skipping the syntax file is a
@@ -1865,7 +1864,10 @@ void ex_listdo(exarg_T *eap)
       default:
         break;
     }
+
     buf_T *buf = curbuf;
+    size_t qf_size = 0;
+
     /* set pcmark now */
     if (eap->cmdidx == CMD_bufdo) {
       /* Advance to the first listed buffer after "eap->line1". */
@@ -1879,6 +1881,22 @@ void ex_listdo(exarg_T *eap)
       }
       if (buf != NULL) {
         goto_buffer(eap, DOBUF_FIRST, FORWARD, buf->b_fnum);
+      }
+    } else if (eap->cmdidx == CMD_cdo || eap->cmdidx == CMD_ldo ||
+               eap->cmdidx == CMD_cfdo || eap->cmdidx == CMD_lfdo) {
+      qf_size = qf_get_size(eap);
+      assert(eap->line1 >= 0);
+      if (qf_size == 0 || (size_t)eap->line1 > qf_size) {
+        buf = NULL;
+      } else {
+        ex_cc(eap);
+
+        buf = curbuf;
+        i = eap->line1 - 1;
+        if (eap->addr_count <= 0) {
+          /* Default to all the quickfix/location list entries. */
+          eap->line2 = qf_size;
+        }
       }
     } else {
       setpcmark();
@@ -1963,6 +1981,16 @@ void ex_listdo(exarg_T *eap)
         /* If autocommands took us elsewhere, quit here */
         if (curbuf->b_fnum != next_fnum)
           break;
+      }
+
+      if (eap->cmdidx == CMD_cdo || eap->cmdidx == CMD_ldo ||
+          eap->cmdidx == CMD_cfdo || eap->cmdidx == CMD_lfdo) {
+        assert(i >= 0);
+        if ((size_t)i >= qf_size || i >= eap->line2) {
+          break;
+        }
+
+        ex_cnext(eap);
       }
 
       if (eap->cmdidx == CMD_windo) {

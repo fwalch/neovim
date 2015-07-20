@@ -496,6 +496,8 @@ followed by another Vim command:
     :argdo
     :autocmd
     :bufdo
+    :cdo
+    :cfdo
     :command
     :cscope
     :debug
@@ -506,6 +508,8 @@ followed by another Vim command:
     :help
     :helpfind
     :lcscope
+    :ldo
+    :lfdo
     :make
     :normal
     :promptfind

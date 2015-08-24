@@ -144,7 +144,8 @@ UI *tui_start(void)
   signal_watcher_start(&data->winch_handle, sigwinch_cb, SIGWINCH);
 
   ui->stop = tui_stop;
-  ui->rgb = os_getenv("NVIM_TUI_ENABLE_TRUE_COLOR") != NULL;
+  ui->enable_rgb = os_getenv("NVIM_TUI_ENABLE_TRUE_COLOR") != NULL;
+  ui->enable_resize = os_getenv("NVIM_TUI_ENABLE_RESIZE") != NULL;
   ui->data = data;
   ui->resize = tui_resize;
   ui->clear = tui_clear;
@@ -212,8 +213,10 @@ static void sigwinch_cb(SignalWatcher *watcher, int signum, void *data)
 {
   got_winch = true;
   UI *ui = data;
-  update_size(ui);
-  ui_refresh();
+  if (ui->enable_resize) {
+    update_size(ui);
+    ui_refresh();
+  }
 }
 
 static bool attrs_differ(HlAttrs a1, HlAttrs a2)
@@ -238,7 +241,7 @@ static void update_attrs(UI *ui, HlAttrs attrs)
   int fg = attrs.foreground != -1 ? attrs.foreground : data->fg;
   int bg = attrs.background != -1 ? attrs.background : data->bg;
 
-  if (ui->rgb) {
+  if (ui->enable_rgb) {
     if (fg != -1) {
       data->params[0].i = (fg >> 16) & 0xff;  // red
       data->params[1].i = (fg >> 8) & 0xff;   // green
@@ -350,7 +353,7 @@ static void tui_resize(UI *ui, int width, int height)
   data->scroll_region.right = width - 1;
   data->row = data->col = 0;
 
-  if (!got_winch) {  // Try to resize the terminal window.
+  if (!got_winch && ui->enable_resize) {  // Try to resize the terminal window.
     char r[16];  // enough for 9999x9999
     snprintf(r, sizeof(r), "\x1b[8;%d;%dt", height, width);
     out(ui, r, strlen(r));

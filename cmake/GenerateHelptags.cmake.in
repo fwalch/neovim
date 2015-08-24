@@ -22,6 +22,7 @@ endif()
 # to disregard other standard input (such as "yes |").
 set(EMPTY_FILE ${CMAKE_CURRENT_BINARY_DIR}/.GenerateHelptags)
 file(WRITE ${EMPTY_FILE} "")
+set(ENV{NVIM_TUI_ENABLE_RESIZE} "")
 execute_process(
   COMMAND ${CMAKE_CURRENT_BINARY_DIR}/bin/nvim
     -u NONE

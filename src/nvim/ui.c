@@ -83,7 +83,7 @@ void ui_builtin_stop(void)
 bool ui_rgb_attached(void)
 {
   for (size_t i = 0; i < ui_count; i++) {
-    if (uis[i]->rgb) {
+    if (uis[i]->enable_rgb) {
       return true;
     }
   }
@@ -147,8 +147,8 @@ void ui_resize(int new_width, int new_height)
   width = new_width;
   height = new_height;
 
-  UI_CALL(update_fg, (ui->rgb ? normal_fg : cterm_normal_fg_color - 1));
-  UI_CALL(update_bg, (ui->rgb ? normal_bg : cterm_normal_bg_color - 1));
+  UI_CALL(update_fg, (ui->enable_rgb ? normal_fg : cterm_normal_fg_color - 1));
+  UI_CALL(update_bg, (ui->enable_rgb ? normal_bg : cterm_normal_bg_color - 1));
 
   sr.top = 0;
   sr.bot = height - 1;
@@ -429,7 +429,7 @@ static void set_highlight_args(int attr_code)
   }
 
 end:
-  UI_CALL(highlight_set, (ui->rgb ? rgb_attrs : cterm_attrs));
+  UI_CALL(highlight_set, (ui->enable_rgb ? rgb_attrs : cterm_attrs));
 }
 
 static void ui_linefeed(void)

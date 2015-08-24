@@ -76,7 +76,8 @@ static Object remote_ui_attach(uint64_t channel_id, uint64_t request_id,
   UI *ui = xcalloc(1, sizeof(UI));
   ui->width = (int)args.items[0].data.integer;
   ui->height = (int)args.items[1].data.integer;
-  ui->rgb = args.items[2].data.boolean;
+  ui->enable_rgb = args.items[2].data.boolean;
+  ui->enable_resize = true;
   ui->data = data;
   ui->resize = remote_ui_resize;
   ui->clear = remote_ui_clear;

@@ -194,8 +194,8 @@ submit_pr() {
     exit 1
   fi
 
-  local pr_body="$(git log --reverse --format='#### %s%n%n%b%n' upstream/master..HEAD)"
-  local patches=("$(git log --reverse --format='%s' upstream/master..HEAD)")
+  local pr_body="$(git log --reverse --format='#### %s%n%n%b%n' vim-patch/review-improvements..HEAD)"
+  local patches=("$(git log --reverse --format='%s' vim-patch/review-improvement..HEAD)")
   patches=(${patches[@]//vim-patch:}) # Remove 'vim-patch:' prefix for each item in array.
   patches="${patches[@]}" # Create space-separated string from array.
   patches="${patches// /,}" # Replace spaces with commas.
@@ -208,11 +208,12 @@ submit_pr() {
     echo "✔ ${output}" ||
     (echo "✘ ${output}"; git reset --soft HEAD^1; false)
 
-  echo
-  echo "Creating pull request."
-  output="$(hub pull-request -F - 2>&1 <<< "${pr_message}")" &&
-    echo "✔ ${output}" ||
-    (echo "✘ ${output}"; false)
+  echo "${pr_message}"
+  #echo
+  #echo "Creating pull request."
+  #output="$(hub pull-request -F - 2>&1 <<< "${pr_message}")" &&
+  #  echo "✔ ${output}" ||
+  #  (echo "✘ ${output}"; false)
 
   echo
   echo "Cleaning up files."

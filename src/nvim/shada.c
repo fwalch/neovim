@@ -1525,7 +1525,27 @@ static const char *shada_get_default_file(void)
 {
   if (default_shada_file == NULL) {
     char *shada_dir = stdpaths_user_data_subpath("shada", 0, false);
-    default_shada_file = concat_fnames_realloc(shada_dir, "main.shada", true);
+
+    char username[MAXPATHL];
+    int username_result = os_get_user_name(username, ARRAY_SIZE(username));
+
+    char *shada_file = "main.shada";
+    if (username_result == OK) {
+      char *user_directory = os_get_user_directory(username);
+
+      expand_env((char_u *)"$HOME", &(NameBuff[0]), MAXPATHL);
+      const char *home_directory = (const char *) &(NameBuff[0]);
+
+      if (strncmp(user_directory, home_directory, MAXPATHL) != 0) {
+        size_t len = strlen(username) + 6;
+        shada_file = xmemdupz(username, len);
+        shada_file = strncat(shada_file, ".shada", len);
+      }
+
+      free(user_directory);
+    }
+
+    default_shada_file = concat_fnames_realloc(shada_dir, shada_file, true);
   }
   return default_shada_file;
 }
@@ -2953,7 +2973,7 @@ shada_write_file_nomerge: {}
       if (!os_isdir(fname)) {
         int ret;
         char *failed_dir;
-        if ((ret = os_mkdir_recurse(fname, 0700, &failed_dir)) != 0) {
+        if ((ret = os_mkdir_recurse(fname, 0777, &failed_dir)) != 0) {
           EMSG3(_(SERR "Failed to create directory %s "
                   "for writing ShaDa file: %s"),
                 failed_dir, os_strerror(ret));
